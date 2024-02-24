@@ -1,3 +1,4 @@
+import json
 import time
 from gpt_researcher.config import Config
 from gpt_researcher.master.functions import *
@@ -86,7 +87,7 @@ class GPTResearcher:
             await stream_output("logs", f"\n🔎 Running research for '{sub_query}'...", self.websocket)
             scraped_sites = await self.scrape_sites_by_query(sub_query)
             content = await self.get_similar_content_by_query(sub_query, scraped_sites)
-            await stream_output("logs", f"📃 {content}", self.websocket)
+            # await stream_output("logs", f"📃 {content}", self.websocket)
             context.append(content)
 
         return context
@@ -119,11 +120,14 @@ class GPTResearcher:
         # Get Urls
         retriever = self.retriever(sub_query)
         search_results = retriever.search(max_results=self.cfg.max_search_results_per_query)
-        new_search_urls = await self.get_new_urls([url.get("href") for url in search_results])
+        await stream_output("results", f"{json.dumps(search_results)}", self.websocket)
+
+        url_set_input = [{"href": obj["url"], "body": obj["content"]} for obj in search_results.get("results", [])]
+        new_search_urls = await self.get_new_urls([url.get("href") for url in url_set_input])
 
         # Scrape Urls
         # await stream_output("logs", f"📝Scraping urls {new_search_urls}...\n", self.websocket)
-        await stream_output("logs", f"🤔Researching for relevant information...\n", self.websocket)
+        await stream_output("logs", f"🤔 Researching for relevant information...\n", self.websocket)
         scraped_content_results = scrape_urls(new_search_urls, self.cfg)
         return scraped_content_results
 

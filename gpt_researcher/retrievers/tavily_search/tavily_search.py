@@ -42,10 +42,12 @@ class TavilySearch():
         """
         try:
             # Search the query
-            results = self.client.search(self.query, search_depth="advanced", max_results=max_results)
+            results = self.client.search(self.query, search_depth="advanced", max_results=max_results, include_images=True)
             # Return the results
             search_response = [{"href": obj["url"], "body": obj["content"]} for obj in results.get("results", [])]
         except Exception as e: # Fallback in case overload on Tavily Search API
-            ddg = DDGS()
-            search_response = ddg.text(self.query, region='wt-wt', max_results=max_results)
-        return search_response
+            print(e)
+            results = {}
+            # ddg = DDGS()
+            # search_response = ddg.text(self.query, region='wt-wt', max_results=max_results)
+        return results
